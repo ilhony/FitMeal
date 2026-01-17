@@ -14,7 +14,196 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      daily_progress: {
+        Row: {
+          calories_burned: number
+          calories_consumed: number
+          created_at: string
+          date: string
+          id: string
+          steps: number
+          updated_at: string
+          user_id: string
+          water_ml: number
+        }
+        Insert: {
+          calories_burned?: number
+          calories_consumed?: number
+          created_at?: string
+          date?: string
+          id?: string
+          steps?: number
+          updated_at?: string
+          user_id: string
+          water_ml?: number
+        }
+        Update: {
+          calories_burned?: number
+          calories_consumed?: number
+          created_at?: string
+          date?: string
+          id?: string
+          steps?: number
+          updated_at?: string
+          user_id?: string
+          water_ml?: number
+        }
+        Relationships: []
+      }
+      dietary_preferences: {
+        Row: {
+          allergies: string[] | null
+          created_at: string
+          id: string
+          preference: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allergies?: string[] | null
+          created_at?: string
+          id?: string
+          preference?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allergies?: string[] | null
+          created_at?: string
+          id?: string
+          preference?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      family_circles: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      family_members: {
+        Row: {
+          family_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          calorie_goal: number
+          created_at: string
+          display_name: string
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          calorie_goal?: number
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          calorie_goal?: number
+          created_at?: string
+          display_name?: string
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_challenges: {
+        Row: {
+          created_at: string
+          current: number
+          end_date: string
+          family_id: string
+          id: string
+          start_date: string
+          target: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          current?: number
+          end_date?: string
+          family_id: string
+          id?: string
+          start_date?: string
+          target: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          current?: number
+          end_date?: string
+          family_id?: string
+          id?: string
+          start_date?: string
+          target?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_challenges_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { 
   User, 
   Utensils, 
@@ -13,11 +14,78 @@ import {
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { SettingsItem } from "@/components/SettingsItem";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
+interface Profile {
+  display_name: string;
+  email: string | null;
+  calorie_goal: number;
+}
+
+interface DietaryPreferences {
+  preference: string;
+  allergies: string[];
+}
 
 const Profile = () => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   const [notifications, setNotifications] = useState(true);
   const [healthSync, setHealthSync] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [preferences, setPreferences] = useState<DietaryPreferences | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("display_name, email, calorie_goal")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+
+      const { data: prefData } = await supabase
+        .from("dietary_preferences")
+        .select("preference, allergies")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (prefData) {
+        setPreferences(prefData);
+      }
+    };
+
+    fetchData();
+  }, [user]);
+
+  const handleLogout = async () => {
+    await signOut();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+    navigate("/auth");
+  };
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const email = profile?.email || user?.email || "";
+  const dietaryPref = preferences?.preference || "none";
+  const calorieGoal = profile?.calorie_goal || 2000;
+
+  const formatPreference = (pref: string) => {
+    if (pref === "none") return "None";
+    return pref.charAt(0).toUpperCase() + pref.slice(1);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -32,15 +100,15 @@ const Profile = () => {
         <div className="bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 mb-4">
           <div className="relative">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary border-2 border-primary">
-              A
+              {displayName.charAt(0).toUpperCase()}
             </div>
             <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-muted rounded-full flex items-center justify-center border border-border">
               <Camera className="w-3 h-3 text-muted-foreground" />
             </button>
           </div>
           <div className="flex-1">
-            <h2 className="font-semibold text-foreground">Alex Thompson</h2>
-            <p className="text-sm text-muted-foreground">alex.t@example.com</p>
+            <h2 className="font-semibold text-foreground">{displayName}</h2>
+            <p className="text-sm text-muted-foreground">{email}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
         </div>
@@ -74,7 +142,7 @@ const Profile = () => {
               <SettingsItem
                 icon={<Utensils className="w-5 h-5 text-primary" />}
                 label="Dietary Preferences"
-                value="Vegan"
+                value={formatPreference(dietaryPref)}
                 iconBg="bg-primary/10"
               />
             </div>
@@ -82,7 +150,7 @@ const Profile = () => {
               <SettingsItem
                 icon={<Target className="w-5 h-5 text-sky-500" />}
                 label="My Goals"
-                value="2,000 Kcal"
+                value={`${calorieGoal.toLocaleString()} Kcal`}
                 iconBg="bg-sky-500/10"
               />
             </div>
@@ -131,7 +199,10 @@ const Profile = () => {
         </div>
 
         {/* Logout Button */}
-        <button className="w-full py-4 bg-destructive/10 rounded-2xl flex items-center justify-center gap-2 text-destructive font-medium hover:bg-destructive/20 transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="w-full py-4 bg-destructive/10 rounded-2xl flex items-center justify-center gap-2 text-destructive font-medium hover:bg-destructive/20 transition-colors"
+        >
           <LogOut className="w-5 h-5" />
           Log Out
         </button>
