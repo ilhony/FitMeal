@@ -1,18 +1,106 @@
+import { useEffect, useState } from "react";
 import { MoreVertical, Droplets, Footprints, ChevronRight, Plus } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { CalorieRing } from "@/components/CalorieRing";
 import { MacroBar } from "@/components/MacroBar";
 import { WorkoutCard } from "@/components/WorkoutCard";
 import { StatCard } from "@/components/StatCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import oatmealBowl from "@/assets/oatmeal-bowl.jpg";
 
+interface Profile {
+  display_name: string;
+  calorie_goal: number;
+  avatar_url: string | null;
+}
+
+interface DailyProgress {
+  calories_consumed: number;
+  calories_burned: number;
+  steps: number;
+  water_ml: number;
+}
+
 const Home = () => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [progress, setProgress] = useState<DailyProgress>({
+    calories_consumed: 760,
+    calories_burned: 450,
+    steps: 7540,
+    water_ml: 1200,
+  });
+
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
     weekday: "short",
     day: "numeric",
     month: "short",
   });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("display_name, calorie_goal, avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data) {
+        setProfile(data);
+      }
+    };
+
+    const fetchProgress = async () => {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("daily_progress")
+        .select("calories_consumed, calories_burned, steps, water_ml")
+        .eq("user_id", user.id)
+        .eq("date", today.toISOString().split("T")[0])
+        .maybeSingle();
+
+      if (data) {
+        setProgress(data);
+      }
+    };
+
+    fetchProfile();
+    fetchProgress();
+  }, [user]);
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const calorieGoal = profile?.calorie_goal || 2000;
+  const firstName = displayName.split(" ")[0];
+
+  const getGreeting = () => {
+    const hour = today.getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  const addWater = async () => {
+    if (!user) return;
+
+    const newWater = progress.water_ml + 250;
+    setProgress((prev) => ({ ...prev, water_ml: newWater }));
+
+    await supabase
+      .from("daily_progress")
+      .upsert({
+        user_id: user.id,
+        date: today.toISOString().split("T")[0],
+        water_ml: newWater,
+        calories_consumed: progress.calories_consumed,
+        calories_burned: progress.calories_burned,
+        steps: progress.steps,
+      }, { onConflict: "user_id,date" });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -21,10 +109,10 @@ const Home = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-sm text-muted-foreground">{formattedDate}</p>
-            <h1 className="text-2xl font-bold text-foreground">Good Morning, Alex</h1>
+            <h1 className="text-2xl font-bold text-foreground">{getGreeting()}, {firstName}</h1>
           </div>
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-lg font-bold text-primary">
-            A
+            {firstName.charAt(0).toUpperCase()}
           </div>
         </div>
 
@@ -38,7 +126,7 @@ const Home = () => {
           </div>
 
           <div className="flex justify-center mb-6">
-            <CalorieRing current={760} total={2000} />
+            <CalorieRing current={progress.calories_consumed} total={calorieGoal} />
           </div>
 
           <div className="flex justify-center gap-8">
@@ -57,7 +145,7 @@ const Home = () => {
         <WorkoutCard
           title="Running"
           progress="6.5 km / 8.0 km"
-          calories={450}
+          calories={progress.calories_burned}
           percentage={75}
         />
 
@@ -65,17 +153,17 @@ const Home = () => {
         <div className="grid grid-cols-2 gap-4 mt-6">
           <StatCard
             icon={<Footprints className="w-6 h-6 text-primary" />}
-            value="7,540"
+            value={progress.steps.toLocaleString()}
             label="Steps"
-            progress={75}
+            progress={(progress.steps / 10000) * 100}
             progressColor="hsl(var(--destructive))"
           />
           <StatCard
             icon={<Droplets className="w-6 h-6 text-sky-500" />}
-            value="1,200"
+            value={progress.water_ml.toLocaleString()}
             label="ml Water"
             action={
-              <button className="p-1 hover:bg-muted/50 rounded-full">
+              <button onClick={addWater} className="p-1 hover:bg-muted/50 rounded-full">
                 <Plus className="w-5 h-5 text-muted-foreground" />
               </button>
             }
