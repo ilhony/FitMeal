@@ -1,1 +1,4 @@
 project_id = "jsdalpussgthlkkzleau"
+
+[functions.generate-meals]
+verify_jwt = false
