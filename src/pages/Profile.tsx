@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { DietaryPreferencesDialog } from "@/components/DietaryPreferencesDialog";
 
 interface Profile {
   display_name: string;
@@ -39,6 +40,7 @@ const Profile = () => {
   const [healthSync, setHealthSync] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [preferences, setPreferences] = useState<DietaryPreferences | null>(null);
+  const [dietaryDialogOpen, setDietaryDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,7 +140,7 @@ const Profile = () => {
                 label="Personal Data"
               />
             </div>
-            <div className="px-4">
+            <div className="px-4" onClick={() => setDietaryDialogOpen(true)}>
               <SettingsItem
                 icon={<Utensils className="w-5 h-5 text-primary" />}
                 label="Dietary Preferences"
@@ -214,6 +216,24 @@ const Profile = () => {
       </div>
 
       <BottomNavigation />
+
+      <DietaryPreferencesDialog
+        open={dietaryDialogOpen}
+        onOpenChange={setDietaryDialogOpen}
+        onSave={() => {
+          // Refresh preferences after save
+          const refreshPrefs = async () => {
+            if (!user) return;
+            const { data } = await supabase
+              .from("dietary_preferences")
+              .select("preference, allergies")
+              .eq("user_id", user.id)
+              .maybeSingle();
+            if (data) setPreferences(data);
+          };
+          refreshPrefs();
+        }}
+      />
     </div>
   );
 };
