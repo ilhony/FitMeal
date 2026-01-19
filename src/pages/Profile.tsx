@@ -19,6 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { DietaryPreferencesDialog } from "@/components/DietaryPreferencesDialog";
+import { PersonalDataDialog } from "@/components/PersonalDataDialog";
+import { GoalsDialog } from "@/components/GoalsDialog";
+import { LanguageDialog } from "@/components/LanguageDialog";
 
 interface Profile {
   display_name: string;
@@ -40,33 +43,38 @@ const Profile = () => {
   const [healthSync, setHealthSync] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [preferences, setPreferences] = useState<DietaryPreferences | null>(null);
+  
+  // Dialog states
   const [dietaryDialogOpen, setDietaryDialogOpen] = useState(false);
+  const [personalDataDialogOpen, setPersonalDataDialogOpen] = useState(false);
+  const [goalsDialogOpen, setGoalsDialogOpen] = useState(false);
+  const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
+
+  const fetchData = async () => {
+    if (!user) return;
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("display_name, email, calorie_goal")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (profileData) {
+      setProfile(profileData);
+    }
+
+    const { data: prefData } = await supabase
+      .from("dietary_preferences")
+      .select("preference, allergies")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (prefData) {
+      setPreferences(prefData);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("display_name, email, calorie_goal")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (profileData) {
-        setProfile(profileData);
-      }
-
-      const { data: prefData } = await supabase
-        .from("dietary_preferences")
-        .select("preference, allergies")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (prefData) {
-        setPreferences(prefData);
-      }
-    };
-
     fetchData();
   }, [user]);
 
@@ -95,28 +103,30 @@ const Profile = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-          <button className="text-primary font-medium">Save</button>
         </div>
 
         {/* Profile Card */}
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 mb-4">
+        <button 
+          onClick={() => setPersonalDataDialogOpen(true)}
+          className="w-full bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 mb-4 text-left"
+        >
           <div className="relative">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-xl font-bold text-primary border-2 border-primary">
               {displayName.charAt(0).toUpperCase()}
             </div>
-            <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-muted rounded-full flex items-center justify-center border border-border">
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-muted rounded-full flex items-center justify-center border border-border">
               <Camera className="w-3 h-3 text-muted-foreground" />
-            </button>
+            </div>
           </div>
           <div className="flex-1">
             <h2 className="font-semibold text-foreground">{displayName}</h2>
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground" />
-        </div>
+        </button>
 
         {/* Pro Card */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-4 mb-6 relative overflow-hidden">
+        <button className="w-full bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-4 mb-6 relative overflow-hidden text-left">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-slate-600 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-1">
@@ -126,7 +136,7 @@ const Profile = () => {
             <p className="text-slate-300 text-sm">Manage your subscription plan</p>
           </div>
           <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        </div>
+        </button>
 
         {/* Account & Goals Section */}
         <div className="mb-6">
@@ -134,28 +144,28 @@ const Profile = () => {
             Account & Goals
           </h3>
           <div className="bg-card rounded-2xl shadow-sm border border-border divide-y divide-border">
-            <div className="px-4">
+            <button className="w-full px-4 text-left" onClick={() => setPersonalDataDialogOpen(true)}>
               <SettingsItem
                 icon={<User className="w-5 h-5 text-muted-foreground" />}
                 label="Personal Data"
               />
-            </div>
-            <div className="px-4" onClick={() => setDietaryDialogOpen(true)}>
+            </button>
+            <button className="w-full px-4 text-left" onClick={() => setDietaryDialogOpen(true)}>
               <SettingsItem
                 icon={<Utensils className="w-5 h-5 text-primary" />}
                 label="Dietary Preferences"
                 value={formatPreference(dietaryPref)}
                 iconBg="bg-primary/10"
               />
-            </div>
-            <div className="px-4">
+            </button>
+            <button className="w-full px-4 text-left" onClick={() => setGoalsDialogOpen(true)}>
               <SettingsItem
                 icon={<Target className="w-5 h-5 text-sky-500" />}
                 label="My Goals"
                 value={`${calorieGoal.toLocaleString()} Kcal`}
                 iconBg="bg-sky-500/10"
               />
-            </div>
+            </button>
           </div>
         </div>
 
@@ -190,13 +200,13 @@ const Profile = () => {
                 }
               />
             </div>
-            <div className="px-4">
+            <button className="w-full px-4 text-left" onClick={() => setLanguageDialogOpen(true)}>
               <SettingsItem
                 icon={<Globe className="w-5 h-5 text-muted-foreground" />}
                 label="Language"
                 value="English"
               />
-            </div>
+            </button>
           </div>
         </div>
 
@@ -217,22 +227,25 @@ const Profile = () => {
 
       <BottomNavigation />
 
+      {/* Dialogs */}
       <DietaryPreferencesDialog
         open={dietaryDialogOpen}
         onOpenChange={setDietaryDialogOpen}
-        onSave={() => {
-          // Refresh preferences after save
-          const refreshPrefs = async () => {
-            if (!user) return;
-            const { data } = await supabase
-              .from("dietary_preferences")
-              .select("preference, allergies")
-              .eq("user_id", user.id)
-              .maybeSingle();
-            if (data) setPreferences(data);
-          };
-          refreshPrefs();
-        }}
+        onSave={fetchData}
+      />
+      <PersonalDataDialog
+        open={personalDataDialogOpen}
+        onOpenChange={setPersonalDataDialogOpen}
+        onSave={fetchData}
+      />
+      <GoalsDialog
+        open={goalsDialogOpen}
+        onOpenChange={setGoalsDialogOpen}
+        onSave={fetchData}
+      />
+      <LanguageDialog
+        open={languageDialogOpen}
+        onOpenChange={setLanguageDialogOpen}
       />
     </div>
   );
