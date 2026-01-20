@@ -130,6 +130,60 @@ export type Database = {
           },
         ]
       }
+      generated_meals: {
+        Row: {
+          calories: number
+          carbs: number
+          created_at: string
+          date: string
+          fat: number
+          id: string
+          image_url: string | null
+          ingredients: string
+          meal_type: string
+          protein: number
+          tag: string
+          time: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calories: number
+          carbs?: number
+          created_at?: string
+          date?: string
+          fat?: number
+          id?: string
+          image_url?: string | null
+          ingredients: string
+          meal_type: string
+          protein?: number
+          tag: string
+          time: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calories?: number
+          carbs?: number
+          created_at?: string
+          date?: string
+          fat?: number
+          id?: string
+          image_url?: string | null
+          ingredients?: string
+          meal_type?: string
+          protein?: number
+          tag?: string
+          time?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
