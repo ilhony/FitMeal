@@ -5,6 +5,7 @@ import { CalorieRing } from "@/components/CalorieRing";
 import { MacroBar } from "@/components/MacroBar";
 import { WorkoutCard } from "@/components/WorkoutCard";
 import { StatCard } from "@/components/StatCard";
+import { LogWaterSheet } from "@/components/LogWaterSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import oatmealBowl from "@/assets/oatmeal-bowl.jpg";
@@ -26,11 +27,12 @@ const Home = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [progress, setProgress] = useState<DailyProgress>({
-    calories_consumed: 760,
-    calories_burned: 450,
-    steps: 7540,
-    water_ml: 1200,
+    calories_consumed: 0,
+    calories_burned: 0,
+    steps: 0,
+    water_ml: 0,
   });
+  const [waterSheetOpen, setWaterSheetOpen] = useState(false);
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-US", {
@@ -84,22 +86,24 @@ const Home = () => {
     return "Good Evening";
   };
 
-  const addWater = async () => {
+  const refetchProgress = async () => {
     if (!user) return;
-
-    const newWater = progress.water_ml + 250;
-    setProgress((prev) => ({ ...prev, water_ml: newWater }));
-
-    await supabase
+    const { data } = await supabase
       .from("daily_progress")
-      .upsert({
-        user_id: user.id,
-        date: today.toISOString().split("T")[0],
-        water_ml: newWater,
-        calories_consumed: progress.calories_consumed,
-        calories_burned: progress.calories_burned,
-        steps: progress.steps,
-      }, { onConflict: "user_id,date" });
+      .select("calories_consumed, calories_burned, steps, water_ml")
+      .eq("user_id", user.id)
+      .eq("date", today.toISOString().split("T")[0])
+      .maybeSingle();
+    if (data) {
+      setProgress(data);
+    }
+  };
+
+  const handleWaterSheetClose = (open: boolean) => {
+    setWaterSheetOpen(open);
+    if (!open) {
+      refetchProgress();
+    }
   };
 
   return (
@@ -163,7 +167,7 @@ const Home = () => {
             value={progress.water_ml.toLocaleString()}
             label="ml Water"
             action={
-              <button onClick={addWater} className="p-1 hover:bg-muted/50 rounded-full">
+              <button onClick={() => setWaterSheetOpen(true)} className="p-1 hover:bg-muted/50 rounded-full">
                 <Plus className="w-5 h-5 text-muted-foreground" />
               </button>
             }
@@ -190,6 +194,8 @@ const Home = () => {
       </div>
 
       <BottomNavigation />
+      
+      <LogWaterSheet open={waterSheetOpen} onOpenChange={handleWaterSheetClose} />
     </div>
   );
 };
