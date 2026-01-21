@@ -189,8 +189,12 @@ export type Database = {
           avatar_url: string | null
           calorie_goal: number
           created_at: string
+          current_weight_kg: number | null
           display_name: string
           email: string | null
+          fitness_goal: string | null
+          goal_weight_kg: number | null
+          height_cm: number | null
           id: string
           updated_at: string
           user_id: string
@@ -199,8 +203,12 @@ export type Database = {
           avatar_url?: string | null
           calorie_goal?: number
           created_at?: string
+          current_weight_kg?: number | null
           display_name?: string
           email?: string | null
+          fitness_goal?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
           id?: string
           updated_at?: string
           user_id: string
@@ -209,8 +217,12 @@ export type Database = {
           avatar_url?: string | null
           calorie_goal?: number
           created_at?: string
+          current_weight_kg?: number | null
           display_name?: string
           email?: string | null
+          fitness_goal?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -257,6 +269,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weight_logs: {
+        Row: {
+          created_at: string
+          id: string
+          logged_at: string
+          notes: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logged_at?: string
+          notes?: string | null
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
+      workout_exercises: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          date: string
+          exercise_name: string
+          id: string
+          order_index: number | null
+          reps: number | null
+          sets: number | null
+          updated_at: string
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          date?: string
+          exercise_name: string
+          id?: string
+          order_index?: number | null
+          reps?: number | null
+          sets?: number | null
+          updated_at?: string
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          date?: string
+          exercise_name?: string
+          id?: string
+          order_index?: number | null
+          reps?: number | null
+          sets?: number | null
+          updated_at?: string
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
       }
     }
     Views: {
