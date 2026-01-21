@@ -3,7 +3,8 @@ import { MoreVertical, Droplets, Footprints, ChevronRight, Plus } from "lucide-r
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { CalorieRing } from "@/components/CalorieRing";
 import { MacroBar } from "@/components/MacroBar";
-import { WorkoutCard } from "@/components/WorkoutCard";
+import { WorkoutPlanCard } from "@/components/WorkoutPlanCard";
+import { WeightTracker } from "@/components/WeightTracker";
 import { StatCard } from "@/components/StatCard";
 import { LogWaterSheet } from "@/components/LogWaterSheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -140,21 +141,13 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Daily Workout */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">Daily Workout</h2>
-          <button className="text-sm font-medium text-primary">See All</button>
+        {/* Daily Workout Plan */}
+        <div className="mb-6">
+          <WorkoutPlanCard />
         </div>
 
-        <WorkoutCard
-          title="Running"
-          progress="6.5 km / 8.0 km"
-          calories={progress.calories_burned}
-          percentage={75}
-        />
-
         {/* Stats Row */}
-        <div className="grid grid-cols-2 gap-4 mt-6">
+        <div className="grid grid-cols-2 gap-4">
           <StatCard
             icon={<Footprints className="w-6 h-6 text-primary" />}
             value={progress.steps.toLocaleString()}
@@ -174,8 +167,13 @@ const Home = () => {
           />
         </div>
 
+        {/* Weight Tracker */}
+        <div className="mt-6 mb-6">
+          <WeightTracker />
+        </div>
+
         {/* Today's Meals */}
-        <h2 className="text-lg font-semibold text-foreground mt-6 mb-3">Today's Meals</h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Today's Meals</h2>
         <div className="bg-card rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4">
           <img
             src={oatmealBowl}
