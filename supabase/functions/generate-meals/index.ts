@@ -36,11 +36,14 @@ serve(async (req) => {
 
     // Fetch user's profile and dietary preferences
     const [profileResult, preferencesResult] = await Promise.all([
-      supabaseClient.from("profiles").select("calorie_goal").eq("user_id", user.id).maybeSingle(),
+      supabaseClient.from("profiles").select("calorie_goal, fitness_goal, current_weight_kg, goal_weight_kg").eq("user_id", user.id).maybeSingle(),
       supabaseClient.from("dietary_preferences").select("preference, allergies").eq("user_id", user.id).maybeSingle(),
     ]);
 
     const calorieGoal = profileResult.data?.calorie_goal || 2000;
+    const fitnessGoal = profileResult.data?.fitness_goal || "maintain";
+    const currentWeight = profileResult.data?.current_weight_kg;
+    const goalWeight = profileResult.data?.goal_weight_kg;
     const dietaryPreference = preferencesResult.data?.preference || "none";
     const allergies = preferencesResult.data?.allergies || [];
 
@@ -51,18 +54,50 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Build fitness-aware prompt
+    let fitnessGuidance = "";
+    if (fitnessGoal === "lose") {
+      fitnessGuidance = `The user wants to LOSE WEIGHT. Focus on:
+- High protein meals to preserve muscle mass
+- High fiber foods to increase satiety
+- Lower calorie density options
+- Lean proteins, vegetables, and complex carbs
+- Avoid sugary and high-fat processed foods`;
+    } else if (fitnessGoal === "gain") {
+      fitnessGuidance = `The user wants to GAIN WEIGHT. Focus on:
+- Calorie-dense nutritious foods
+- Higher protein intake for muscle building
+- Healthy fats like nuts, avocados, olive oil
+- Complex carbohydrates for energy
+- Larger portion sizes with nutrient-rich foods`;
+    } else {
+      fitnessGuidance = `The user wants to MAINTAIN their weight. Focus on:
+- Balanced macronutrients
+- Variety of whole foods
+- Sustainable eating patterns`;
+    }
+
+    const weightContext = currentWeight && goalWeight 
+      ? `Current weight: ${currentWeight}kg, Goal weight: ${goalWeight}kg (${goalWeight > currentWeight ? 'gaining' : goalWeight < currentWeight ? 'losing' : 'maintaining'}).`
+      : "";
+
     const systemPrompt = `You are a nutrition expert that creates personalized meal recommendations. 
 Always respond with valid JSON matching the exact schema requested.
-Consider the user's calorie goals, dietary preferences, and allergies when creating meals.
-Make meals practical, delicious, and nutritious.`;
+Consider the user's calorie goals, fitness objectives, dietary preferences, and allergies when creating meals.
+Make meals practical, delicious, and nutritious.
+
+${fitnessGuidance}`;
 
     const userPrompt = `Generate a ${mealType || "complete daily"} meal plan for someone with:
 - Daily calorie goal: ${calorieGoal} kcal
+- Fitness goal: ${fitnessGoal === "lose" ? "Weight Loss" : fitnessGoal === "gain" ? "Weight Gain" : "Maintenance"}
+${weightContext}
 - Dietary preference: ${dietaryPreference}
 - Allergies/restrictions: ${allergies.length > 0 ? allergies.join(", ") : "none"}
 
 Create ${mealType ? "1 meal" : "4 meals"} (breakfast, lunch, dinner, snack if complete day).
-Each meal should fit proportionally within the daily calorie goal.`;
+Each meal should fit proportionally within the daily calorie goal and support their ${fitnessGoal} goal.
+${fitnessGoal === "lose" ? "Prioritize protein and fiber." : fitnessGoal === "gain" ? "Include calorie-dense nutritious options." : ""}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
