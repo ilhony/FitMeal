@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { UserPlus, Trophy, TrendingUp } from "lucide-react";
+import { UserPlus, Trophy, TrendingUp, LogOut } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { WeeklyChallengeCard } from "@/components/WeeklyChallengeCard";
 import { FamilyMemberCard } from "@/components/FamilyMemberCard";
@@ -7,6 +7,7 @@ import { CreateFamilyDialog } from "@/components/CreateFamilyDialog";
 import { JoinFamilyDialog } from "@/components/JoinFamilyDialog";
 import { FamilyOptionsSheet } from "@/components/FamilyOptionsSheet";
 import { ShareInviteDialog } from "@/components/ShareInviteDialog";
+import { LeaveFamilyDialog } from "@/components/LeaveFamilyDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,6 +52,7 @@ const Family = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const fetchFamilyData = useCallback(async () => {
     if (!user) return;
@@ -211,12 +213,23 @@ const Family = () => {
               {family ? `${familyMembers.length} member${familyMembers.length !== 1 ? 's' : ''}` : "Keep your loved ones healthy"}
             </p>
           </div>
-          <button 
-            onClick={handleAddMember}
-            className="p-2 hover:bg-muted/50 rounded-xl border border-border"
-          >
-            <UserPlus className="w-5 h-5 text-foreground" />
-          </button>
+          <div className="flex items-center gap-2">
+            {family && (
+              <button 
+                onClick={() => setLeaveOpen(true)}
+                className="p-2 hover:bg-destructive/10 rounded-xl border border-border"
+                title="Leave family"
+              >
+                <LogOut className="w-5 h-5 text-destructive" />
+              </button>
+            )}
+            <button 
+              onClick={handleAddMember}
+              className="p-2 hover:bg-muted/50 rounded-xl border border-border"
+            >
+              <UserPlus className="w-5 h-5 text-foreground" />
+            </button>
+          </div>
         </div>
 
         {/* Weekly Challenge */}
@@ -300,12 +313,20 @@ const Family = () => {
         onSuccess={fetchFamilyData}
       />
       {family && (
-        <ShareInviteDialog
-          open={shareOpen}
-          onOpenChange={setShareOpen}
-          inviteCode={family.invite_code}
-          familyName={family.name}
-        />
+        <>
+          <ShareInviteDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            inviteCode={family.invite_code}
+            familyName={family.name}
+          />
+          <LeaveFamilyDialog
+            open={leaveOpen}
+            onOpenChange={setLeaveOpen}
+            familyName={family.name}
+            onSuccess={fetchFamilyData}
+          />
+        </>
       )}
     </div>
   );
