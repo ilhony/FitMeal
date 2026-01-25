@@ -344,6 +344,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_family_by_invite_code: {
+        Args: { _invite_code: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       get_family_member_user_ids: {
         Args: { _user_id: string }
         Returns: string[]
