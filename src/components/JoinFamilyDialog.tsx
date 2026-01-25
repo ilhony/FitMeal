@@ -34,11 +34,9 @@ export const JoinFamilyDialog = ({
 
     setIsLoading(true);
     try {
-      // Find family by invite code
+      // Find family by invite code using security definer function
       const { data: family, error: findError } = await supabase
-        .from("family_circles")
-        .select("id, name")
-        .eq("invite_code", inviteCode.trim().toLowerCase())
+        .rpc("get_family_by_invite_code", { _invite_code: inviteCode.trim() })
         .maybeSingle();
 
       if (findError) throw findError;
