@@ -76,7 +76,10 @@ const Family = () => {
       .maybeSingle();
 
     if (!memberData) {
-      // User has no family - show their own stats
+      // User has no family - reset family state and show their own stats
+      setFamily(null);
+      setChallenge(null);
+      
       const today = new Date().toISOString().split("T")[0];
       const { data: progressData } = await supabase
         .from("daily_progress")
