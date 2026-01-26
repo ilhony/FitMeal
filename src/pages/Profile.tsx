@@ -9,7 +9,8 @@ import {
   LogOut, 
   ChevronRight,
   Camera,
-  Crown
+  Crown,
+  Moon
 } from "lucide-react";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { SettingsItem } from "@/components/SettingsItem";
@@ -22,6 +23,7 @@ import { DietaryPreferencesDialog } from "@/components/DietaryPreferencesDialog"
 import { PersonalDataDialog } from "@/components/PersonalDataDialog";
 import { GoalsDialog } from "@/components/GoalsDialog";
 import { LanguageDialog } from "@/components/LanguageDialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface Profile {
   display_name: string;
@@ -207,6 +209,14 @@ const Profile = () => {
                 value="English"
               />
             </button>
+            <div className="px-4">
+              <SettingsItem
+                icon={<Moon className="w-5 h-5 text-violet-500" />}
+                label="Dark Mode"
+                iconBg="bg-violet-500/10"
+                action={<ThemeToggle />}
+              />
+            </div>
           </div>
         </div>
 
